@@ -3,6 +3,8 @@ package com.example.snake_game;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.TextAlignment;
 import javafx.util.Pair;
 import java.util.LinkedList;
 import java.util.Objects;
@@ -15,7 +17,6 @@ enum direction{
 }
 public class Snake{
     //Snake configurations/attributes
-    private int length;
     private Color color;
     private LinkedList<Pair<Integer, Integer>> coordinates;
     public Pair<Integer, Integer> foodPos;
@@ -26,6 +27,7 @@ public class Snake{
     private direction oldDir;
     private boolean alive;
     private Canvas canvas;
+    private GraphicsContext gc;
 
     public Snake(int length, int gridSize, Canvas canvas){
         this.canvas = canvas;
@@ -35,7 +37,6 @@ public class Snake{
         this.boundX = (int)canvas.getWidth();
         this.boundY = (int)canvas.getHeight();
         this.foodPos = new Pair<>(this.boundX,this.boundY);
-        this.length = 0;
         this.stepSize = gridSize;
         int startX = this.boundX/2/this.stepSize*this.stepSize;
         int startY = this.boundY/2/this.stepSize*this.stepSize;
@@ -45,8 +46,9 @@ public class Snake{
         for(int i = 0; i < length-1; i++){
             grow();
         }
-        GraphicsContext gc = this.canvas.getGraphicsContext2D();
+        gc = this.canvas.getGraphicsContext2D();
         gc.setFill(this.color);
+        drawGrid();
         drawSnake();
         spawnFood();
     }
@@ -57,11 +59,14 @@ public class Snake{
         Pair<Integer, Integer> xy = this.coordinates.getLast();
         Pair<Integer, Integer> newPos = new Pair<>(xy.getKey()-stepSize, xy.getValue());
         this.coordinates.addLast(newPos);
-        this.length++;
     }
     //moves the snake by a fixed step size(one grid)
     public void move(){
-        this.coordinates.addFirst(nextStep());
+        Pair<Integer, Integer> newFirst = nextStep();
+        if(newFirst == this.coordinates.getFirst()){
+            return;
+        }
+        this.coordinates.addFirst(newFirst);
         drawSegment(coordinates.getFirst(), this.color);
         if(!isBody(this.foodPos)){
             int lastX = this.coordinates.getLast().getKey();
@@ -109,7 +114,6 @@ public class Snake{
         }
     }
     public void drawSegment(Pair<Integer, Integer> seg, Color color){
-        GraphicsContext gc = this.canvas.getGraphicsContext2D();
         gc.setFill(color);
         gc.fillRect(seg.getKey(), seg.getValue(), this.stepSize, this.stepSize);
     }
@@ -120,20 +124,49 @@ public class Snake{
             int y = (int) (Math.random()*this.boundY / this.stepSize)* this.stepSize;
             this.foodPos = new Pair<>(x,y);
         }while(isBody(this.foodPos));
-        GraphicsContext gc = this.canvas.getGraphicsContext2D();
         gc.setFill(Color.BLUE);
         gc.fillOval(this.foodPos.getKey(), this.foodPos.getValue(), this.stepSize, this.stepSize);
     }
     public boolean isAlive(){
         return this.alive;
     }
+    public int getLength(){
+        return this.coordinates.size();
+    }
     //Check if the pair is in the body linked list
-    private boolean isBody(Pair<Integer, Integer> pos){
-        for(Pair<Integer, Integer> pair: this.coordinates){
-            if(Objects.equals(pair.getKey(), pos.getKey()) && Objects.equals(pair.getValue(), pos.getValue())){
+    private boolean isBody(Pair<Integer, Integer> pos) {
+        for (Pair<Integer, Integer> pair : this.coordinates) {
+            if (Objects.equals(pair.getKey(), pos.getKey()) && Objects.equals(pair.getValue(), pos.getValue())) {
                 return true;
             }
         }
         return false;
+    }
+    public void drawEndScreen(){
+        gc.setFont(new Font(canvas.getWidth()/10));
+        gc.setTextAlign(TextAlignment.CENTER);
+        gc.setFill(Color.BLACK);
+        gc.fillRect(0,0, canvas.getWidth(), canvas.getHeight());
+        gc.setFill(Color.RED);
+        String message;
+        if(this.coordinates.size() == (boundX/stepSize)*(boundY/stepSize)){
+            message = "YOU WIN!!!!!";
+        }else{
+            message = "GAME OVER";
+        }
+        gc.fillText(message, canvas.getWidth()/2, canvas.getHeight()/2);
+    }
+    private void drawGrid(){
+        //Draw Grid
+        for (int i = 0; i < canvas.getHeight(); i += stepSize) {
+            for (int j = 0; j < canvas.getWidth(); j += stepSize) {
+                if ((i + j) / stepSize % 2 == 0) {
+                    gc.setFill(Color.GREEN);
+                } else {
+                    gc.setFill(Color.LIGHTGREEN);
+                }
+                gc.fillRect(j, i, stepSize, stepSize);
+            }
+        }
     }
 }
