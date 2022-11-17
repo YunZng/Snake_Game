@@ -46,19 +46,29 @@ public class Menu {
         radioInit();
     }
     public void drawMenu(){
-        // Speed selection
+        // Grid size selection
         menuGc.setFill(Color.BLACK);
         menuGc.fillRect(menuWidth/2,0, menuWidth/2,menuHeight/2);
-        // Difficulty selection
+
+        // Speed selection
         menuGc.setFill(Color.WHITE);
         menuGc.fillRect(menuWidth/2,menuHeight/2, menuWidth/2,menuHeight/2);
+        menuGc.setFill(Color.BLACK);
+        menuGc.setTextAlign(TextAlignment.LEFT);
+        menuGc.fillText("Speed", menuWidth/2, 3*menuHeight/4);
+        menuGc.setTextAlign(TextAlignment.CENTER);
+
     }
+
+    // draw score on upper left of menu
     public void drawScore(int score){
         menuGc.setFill(Color.WHITE);
         menuGc.fillRect(0,0, menuWidth/2,menuHeight/2);
         menuGc.setFill(Color.BLACK);
         menuGc.fillText("Score: "+score, menuWidth/4, menuHeight/4);
     }
+
+    // draw text on lower left of menu
     public void drawMsg(){
         menuGc.setFill(Color.BLACK);
         menuGc.fillRect(0,menuHeight/2, menuWidth/2,menuHeight/2);
@@ -93,6 +103,7 @@ public class Menu {
         return this.group;
     }
 
+    //position and configure the slider
     private void sliderInit(){
         slider = new Slider(1, 3, 2);
         slider.setShowTickMarks(true);
@@ -105,6 +116,9 @@ public class Menu {
         slider.setMajorTickUnit(0.25f);
         slider.setBlockIncrement(0.25f);
     }
+
+    // position and configure the radio buttons, add them to a group
+    // group ensures that only one gets selected at a time
     private void radioInit(){
         group = new ToggleGroup();
 

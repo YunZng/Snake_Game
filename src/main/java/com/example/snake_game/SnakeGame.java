@@ -4,15 +4,11 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.Group;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Toggle;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
 import javafx.scene.canvas.Canvas;
 import javafx.util.Duration;
@@ -21,10 +17,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.input.MouseEvent;
 import java.io.IOException;
 
-import java.util.Objects;
 
-
-public class HelloApplication extends Application {
+public class SnakeGame extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         build_menu(stage);
@@ -56,6 +50,7 @@ public class HelloApplication extends Application {
         stage.setTitle("Snake Game By Yulun");
         stage.setScene(scene);
 
+        // Initial menu display, player can customize and begin from here
         menu.drawMsg();
         menu.drawMenu();
         stage.show();
@@ -70,6 +65,8 @@ public class HelloApplication extends Application {
                 play(stage, menu, canvas);
             }
         });
+
+        // Event handler for speed selection
         menu.getSlider().valueProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable,
@@ -80,6 +77,7 @@ public class HelloApplication extends Application {
 
         });
 
+        // Event handler for grid size selection
         menu.getGroup().selectedToggleProperty().addListener(new ChangeListener<Toggle>() {
             @Override
             public void changed(ObservableValue<? extends Toggle> ob,
@@ -95,22 +93,36 @@ public class HelloApplication extends Application {
                 canvas.requestFocus();
             }
         });
-
     }
+
+    // Actual content of the game
     public void play(Stage stage, Menu menu, Canvas canvas){
-        //Initialize a snake
+        //Initialize a snake using data configured in the menu
         final Snake snake = new Snake(2, menu.getGridSize(), canvas);
 
         //Lambda is a good replacement for overwriting the entire handler.
-        Timeline game = new Timeline(new KeyFrame(Duration.millis(menu.getSpeed()), e -> begin(snake, menu, stage)));
+        //game runs at menu.getSpeed() frame rate, each frame processes the event specified
+        Timeline game = new Timeline(new KeyFrame(Duration.millis(menu.getSpeed()),
+                e -> begin(snake, menu, stage)));
+
+        // Want the animation to continue until interrupted
         game.setCycleCount(Animation.INDEFINITE);
         game.play();
-        game.statusProperty().addListener((obs, oldStatus, newStatus) -> {
-            if (newStatus == Animation.Status.STOPPED) {
-                System.out.println("restarting");
-                play(stage, menu, canvas);
+
+        // Gets called when the game is stopped, since the game is asynchronous
+        game.statusProperty().addListener(new ChangeListener<Animation.Status>() {
+            @Override
+            public void changed(ObservableValue<? extends Animation.Status> observableValue,
+                                Animation.Status status, Animation.Status t1) {
+                if (t1 == Animation.Status.STOPPED) {
+                    System.out.println("restarting");
+                    // Restart the game, menu configuration is preserved
+                    play(stage, menu, canvas);
+                }
             }
         });
+
+        // Change snake direction, or pause
         stage.getScene().setOnKeyPressed(keyEvent -> {
             switch (keyEvent.getCode()) {
                 case UP -> snake.changeDir(direction.UP);
@@ -119,10 +131,12 @@ public class HelloApplication extends Application {
                 case RIGHT -> snake.changeDir(direction.RIGHT);
                 case SPACE -> menu.togglePause();
             }
+            // ensures the canvas is getting arrow key, not slider or radio button
             canvas.requestFocus();
             keyEvent.consume();
         });
 
+        // Menu navigation for the start/pause/resume/restart button
         stage.getScene().setOnMouseClicked(new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent clickEvent) {
@@ -145,12 +159,6 @@ public class HelloApplication extends Application {
                             }
                             menu.drawMsg();
                         }
-                    } else {
-                        if (mouseY > menu.getCanvas().getHeight() / 2) {
-                            System.out.println("lower right");
-                        } else {
-                            System.out.println("upper right");
-                        }
                     }
                 }
                 canvas.requestFocus();
@@ -158,6 +166,9 @@ public class HelloApplication extends Application {
             }
         });
     }
+
+    // game process this every frame, updates image for every frame
+    // and detects death.
     public void begin(Snake snake, Menu menu, Stage stage) {
         if (!menu.isPause() && snake.isAlive()) {
             snake.move();

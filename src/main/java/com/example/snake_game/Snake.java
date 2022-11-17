@@ -60,14 +60,17 @@ public class Snake{
         Pair<Integer, Integer> newPos = new Pair<>(xy.getKey()-stepSize, xy.getValue());
         this.coordinates.addLast(newPos);
     }
-    //moves the snake by a fixed step size(one grid)
+    //moves the snake by a fixed step size (one box)
     public void move(){
         Pair<Integer, Integer> newFirst = nextStep();
         if(newFirst == this.coordinates.getFirst()){
             return;
         }
+        // move by adding a block of the next position to its head
         this.coordinates.addFirst(newFirst);
         drawSegment(coordinates.getFirst(), this.color);
+
+        // if the food happen to be in the body of the snake, don't delete its tail, also spawn new food
         if(!isBody(this.foodPos)){
             int lastX = this.coordinates.getLast().getKey();
             int lastY = this.coordinates.getLast().getValue();
@@ -81,6 +84,7 @@ public class Snake{
             spawnFood();
         }
     }
+
     //returns the coordinates of the next step
     public Pair<Integer, Integer> nextStep(){
         int xPos = this.coordinates.getFirst().getKey();
@@ -113,6 +117,8 @@ public class Snake{
             drawSegment(pair, this.color);
         }
     }
+
+    // Draw one body segment of snake
     public void drawSegment(Pair<Integer, Integer> seg, Color color){
         gc.setFill(color);
         gc.fillRect(seg.getKey(), seg.getValue(), this.stepSize, this.stepSize);
@@ -142,6 +148,7 @@ public class Snake{
         }
         return false;
     }
+
     public void drawEndScreen(){
         gc.setFont(new Font(canvas.getWidth()/10));
         gc.setTextAlign(TextAlignment.CENTER);
@@ -156,6 +163,8 @@ public class Snake{
         }
         gc.fillText(message, canvas.getWidth()/2, canvas.getHeight()/2);
     }
+
+    // Grid determined by menu configuration
     private void drawGrid(){
         //Draw Grid
         for (int i = 0; i < canvas.getHeight(); i += stepSize) {
